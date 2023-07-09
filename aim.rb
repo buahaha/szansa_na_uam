@@ -40,7 +40,7 @@ end
 
 def check_level(file)
   level = `cat kierunki_uam_html/#{file} | htmlq "#main > div.jumbotron > div > div > div:nth-child(1) > strong" --text`
-  if not level.include? "pierwszego stopnia"
+  if not level.include? "pierwszego stopnia" and not level.include? "jednolite magisterskie"
     # puts "Error: #{file} is erroneously parsed."
     return false
   end
