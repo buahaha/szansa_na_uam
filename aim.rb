@@ -128,9 +128,25 @@ def check_if_test_geografia(file)
 end
 
 def spots(file)
-  liczba_miejsc = `cat kierunki_uam_html/#{file} | htmlq ".mb-0:nth-child(2) > tbody > tr:nth-child(7) > td:nth-child(2) > b" --text`
+  drugi_nabor = false
+  liczba_miejsc = `cat kierunki_uam_html/#{file} | htmlq ".mb-0:nth-child(2) > tbody > tr:nth-child(7) > td:nth-child(2) > b" --text`.chomp
+  # check if liczba_miejsc contain line break
+  if liczba_miejsc.include? "\n"
+    wszystkie_miejsca = `cat kierunki_uam_html/#{file} | htmlq ".mb-0:nth-child(2) > tbody > tr:nth-child(7) > td:nth-child(2) > b" --text`
+    # split on line break
+    liczba_miejsc = liczba_miejsc.split("\n")[0]
+    # check if second item in split on line break is number
+    if wszystkie_miejsca.split("\n")[1].to_i.to_s == wszystkie_miejsca.split("\n")[1]
+      drugi_nabor = true
+    end
+  end
   payed = `cat kierunki_uam_html/#{file} | htmlq ".mb-0:nth-child(3) > tbody > tr:nth-child(2) > td:nth-child(2)" --text`
-  return liczba_miejsc, payed
+  if drugi_nabor
+    payed = `cat kierunki_uam_html/#{file} | htmlq ".mb-0:nth-child(3) > tbody > tr:nth-child(2) > td:nth-child(2)" --text`
+    # split on line break
+    payed = payed.split("\n")[0]
+  end
+  return liczba_miejsc, payed, drugi_nabor
 end  
 
 def get_unique_array_rows(array, column)
@@ -175,7 +191,7 @@ if __FILE__ == $PROGRAM_NAME
     if not check_first_test_math(file) and not check_second_test_math(file)
       next
     end
-    liczba_miejsc, payed = spots(file)
+    liczba_miejsc, payed, drugi_nabor = spots(file)
     if liczba_miejsc == "" or payed == ""
       # puts "Error: #{file} is erroneously parsed."
       next
@@ -195,7 +211,7 @@ if __FILE__ == $PROGRAM_NAME
     end
     bonus = 0
     if check_if_test_wos(file)
-      bonus = 13
+      bonus = 20
     end
     if check_if_test_geografia(file)
       bonus = 20
@@ -207,6 +223,9 @@ if __FILE__ == $PROGRAM_NAME
       next
     end
     where = file.split(",")[0]
+    if drugi_nabor
+      where = where + " (II nabor)"
+    end
     url = file.split(",")[1]
     chance = get_chances_of_getting_in(Float(liczba_miejsc), Float(payed), base_from_matura + bonus)
     # append to array wyniki
